@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1060194918769",
+    "project_id": "qryptic-7c567",
+    "storage_bucket": "qryptic-7c567.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1060194918769:android:74009e1b9cde2f03af16d0",
+        "android_client_info": {
+          "package_name": "com.example.qryptic"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDFBTU4BeU9kDXEev1sOgJ0CRKulrN_vqU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
