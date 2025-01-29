@@ -8,6 +8,13 @@ import uuid
 import jwt
 import datetime
 import ssl
+import firebase_admin
+from firebase_admin import credentials, firestore
+
+cred = credentials.Certificate("qryptic-7c567-82e8bf5a64e4.json")
+firebase_admin.initialize_app(cred)
+db = firestore.client()
+
 
 app = FastAPI()
 
@@ -22,11 +29,6 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 # 📌 OAuth2 Token Handling
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-# ✅ Dummy User Database
-fake_users_db = {
-    "krishna": {"username": "krishna", "password": "securepassword"},
-    "aryan": {"username": "aryan", "password": "securepassword"},
-}
 
 # 📌 User Model
 class Token(BaseModel):
@@ -34,7 +36,7 @@ class Token(BaseModel):
     token_type: str
 
 class User(BaseModel):
-    username: str
+    userId: str
 
 # ✅ Function to create JWT tokens
 def create_access_token(data: dict, expires_delta: datetime.timedelta):
@@ -46,8 +48,9 @@ def create_access_token(data: dict, expires_delta: datetime.timedelta):
 # ✅ Login API - Generates JWT Token
 @app.post("/token", response_model=Token)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
-    user = fake_users_db.get(form_data.username)
-    if not user or user["password"] != form_data.password:
+    # Use userId instead of username
+    isUserValid = db.collection("users").doc(form_data.username).get().exists
+    if not isUserValid:
         raise HTTPException(status_code=400, detail="Invalid credentials")
 
     access_token_expires = datetime.timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -60,10 +63,10 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
 def get_current_user(token: str = Depends(oauth2_scheme)):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username = payload.get("sub")
-        if username is None:
+        user_id = payload.get("sub")  # changed to userId
+        if user_id is None:
             raise HTTPException(status_code=401, detail="Invalid token")
-        return {"username": username}
+        return {"userId": user_id}  # changed to userId
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token expired")
     except jwt.InvalidTokenError:

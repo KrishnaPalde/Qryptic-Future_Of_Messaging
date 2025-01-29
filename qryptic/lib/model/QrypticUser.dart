@@ -13,8 +13,8 @@ class QrypticUser {
   bool? isOnline; // Online status
   List<String>? contacts; // List of userIds of contacts
   List<String>? blockedUsers; // List of userIds the user has blocked
-  String? publicKey; // Public key for encryption
-  String? privateKey; // Private key for encryption (stored securely)
+  String qkdSessionId;
+  bool isSessionFinished;
   String? bio; // QrypticUser's optional bio or status message
   bool? enableNotifications; // Push notification preference
   bool? enableQuantumEncryption; // Preference for quantum encryption
@@ -33,8 +33,8 @@ class QrypticUser {
     this.isOnline,
     this.contacts,
     this.blockedUsers,
-    this.publicKey,
-    this.privateKey,
+    this.qkdSessionId = "",
+    this.isSessionFinished = false,
     this.bio,
     this.enableNotifications,
     this.enableQuantumEncryption,
@@ -56,8 +56,8 @@ class QrypticUser {
       isOnline: map['isOnline'],
       contacts: List<String>.from(map['contacts'] ?? []),
       blockedUsers: List<String>.from(map['blockedUsers'] ?? []),
-      publicKey: map['publicKey'],
-      privateKey: map['privateKey'],
+      qkdSessionId: map['qkdSessionId'] ?? "",
+      isSessionFinished: map['isSessionFinished'],
       bio: map['bio'],
       enableNotifications: map['enableNotifications'],
       enableQuantumEncryption: map['enableQuantumEncryption'],
@@ -80,8 +80,8 @@ class QrypticUser {
       'isOnline': isOnline,
       'contacts': contacts,
       'blockedUsers': blockedUsers,
-      'publicKey': publicKey,
-      'privateKey': privateKey,
+      'qkdSessionId': qkdSessionId,
+      'isSessionFinished': isSessionFinished,
       'bio': bio,
       'enableNotifications': enableNotifications,
       'enableQuantumEncryption': enableQuantumEncryption,

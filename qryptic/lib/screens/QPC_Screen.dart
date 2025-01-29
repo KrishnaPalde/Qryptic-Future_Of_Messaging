@@ -1,11 +1,14 @@
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:mobile_scanner/mobile_scanner.dart'; // Import mobile_scanner
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:qryptic/helper/StaticData.dart';
 import 'package:qryptic/helper/database.dart';
+import 'package:qryptic/model/QrypticUser.dart';
 import 'package:qryptic/widget/ScannedBarcodeLabel.dart';
 
 class QPCScreen extends StatefulWidget {
@@ -193,33 +196,95 @@ class _QPCScreenState extends State<QPCScreen> {
     showDialog(
       context: context,
       builder: (context) => Dialog(
-        child: SizedBox(
-          height: 350,
-          width: 300,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const Text(
-                'Your QPC QR Code:',
-                style: TextStyle(fontSize: 16),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                StaticData.user.qrypticPhrase.toString(),
-                style:
-                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-              QrImageView(
-                data: StaticData.user.qrypticPhrase.toString(),
-                backgroundColor: Colors.white,
-                size: 200.0,
-              ),
-              const SizedBox(height: 16),
-            ],
-          ),
-        ),
+        child: StreamBuilder(
+            stream: FirebaseFirestore.instance
+                .collection('users')
+                .doc(FirebaseAuth.instance.currentUser!.uid)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.active) {
+                if (!snapshot.hasData || snapshot.data == null) {
+                  return const Center(
+                    child: Text("Error"),
+                  );
+                }
+                QrypticUser user = QrypticUser.fromMap(snapshot.data!.data()!);
+                if (user.qkdSessionId != null) {
+                  if (user.qkdSessionId!.isNotEmpty) {
+                    return FutureBuilder(
+                      future: joinQKDSession(user.qkdSessionId!),
+                      builder: (context, futureSnapshot) {
+                        if (futureSnapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Padding(
+                            padding: EdgeInsets.all(20.0),
+                            child: SpinKitFadingCube(
+                              color: Colors.white,
+                              size: 40.0,
+                            ),
+                          );
+                        } else {
+                          return Center(
+                            child: Column(
+                              children: [
+                                const Icon(
+                                  Icons.check_circle,
+                                  color: Colors.green,
+                                  size: 80,
+                                ),
+                                const SizedBox(
+                                  height: 50,
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.pop(context); // Close the dialog
+                                  },
+                                  child: const Text("Close"),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                      },
+                    );
+                  }
+                  return SizedBox(
+                    height: 350,
+                    width: 300,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        const Text(
+                          'Your QPC QR Code:',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          StaticData.user.qrypticPhrase.toString(),
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 16),
+                        QrImageView(
+                          data: StaticData.user.qrypticPhrase.toString(),
+                          backgroundColor: Colors.white,
+                          size: 200.0,
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                    ),
+                  );
+                } else {
+                  return const Center(
+                    child: CircularProgressIndicator(),
+                  );
+                }
+              }
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            }),
       ),
     );
   }
