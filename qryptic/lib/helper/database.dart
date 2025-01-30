@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:qryptic/helper/StaticData.dart';
 import 'package:qryptic/model/QrypticUser.dart';
 import 'package:http/http.dart' as http;
 
@@ -90,17 +91,22 @@ Future<Map<String, String>> connectUserViaQR(String qpr) async {
             .contains(FirebaseAuth.instance.currentUser!.uid)) {
           return {"message": "Already Connected."};
         }
-        var tokenUrl = Uri.https('192.168.0.113:8000', 'token');
-        var startQKDUrl = Uri.https('192.168.0.113:8000', 'start_qkd');
-        var tokenResponse = await http.post(
-          tokenUrl,
-          body: {'userId': FirebaseAuth.instance.currentUser!.uid.toString()},
-        );
+        var tokenUrl = Uri.http('3.110.196.16', '/token');
+        var startQKDUrl = Uri.http('3.110.196.16', '/start_qkd');
+        Map<String, String> tokenBody = {
+          'username': FirebaseAuth.instance.currentUser!.uid.toString(),
+          'password': '',
+        };
+        var tokenResponse =
+            await http.post(tokenUrl, body: tokenBody, headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Accept': 'application/json',
+        });
 
         if (tokenResponse.statusCode == 200) {
           var token;
           token = jsonDecode(tokenResponse.body)['access_token'];
-
+          Fluttertoast.showToast(msg: token);
           var startQKDResponse = await http.post(startQKDUrl, headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
@@ -109,6 +115,7 @@ Future<Map<String, String>> connectUserViaQR(String qpr) async {
 
           if (startQKDResponse.statusCode == 200) {
             bool isSessionFinished = false;
+            print(startQKDResponse.body);
             var qkdSessionId = jsonDecode(startQKDResponse.body)['session_id'];
 
             if (qkdSessionId != null) {
@@ -118,6 +125,7 @@ Future<Map<String, String>> connectUserViaQR(String qpr) async {
                   .update({
                 "qkdSessionId": qkdSessionId.toString(),
               });
+              print("code here 1");
               await for (var event in FirebaseFirestore.instance
                   .collection('users')
                   .doc(_tempUser.userId)
@@ -131,10 +139,11 @@ Future<Map<String, String>> connectUserViaQR(String qpr) async {
                   }
                 }
               }
+              print("code here 2");
               if (isSessionFinished) {
-                var getKeyURL = Uri.https('192.168.0.113:8000',
+                var getKeyURL = Uri.http('3.110.196.16',
                     '/get_shared_key/${qkdSessionId.toString()}');
-                var getKeyResponse = await http.post(getKeyURL, headers: {
+                var getKeyResponse = await http.get(getKeyURL, headers: {
                   'Content-Type': 'application/json',
                   'Accept': 'application/json',
                   'Authorization': 'Bearer $token',
@@ -209,31 +218,42 @@ Future<bool> isUserOnboarded(String uid) async {
 }
 
 Future<void> joinQKDSession(String sessionId) async {
-  var tokenUrl = Uri.https('192.168.0.113:8000', 'token');
-  var tokenResponse = await http.post(tokenUrl,
-      body: {'userId': FirebaseAuth.instance.currentUser!.uid.toString()});
-
-  if (tokenResponse.statusCode == 200) {
-    var token;
-    token = jsonDecode(tokenResponse.body)['access_token'];
-
-    var joinSessionResponse = await http
-        .post(Uri.https('192.168.0.113:8000', 'join_qkd/$sessionId'), headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'Authorization': 'Bearer $token',
+  if (StaticData.hasJoinedSession) {
+    return;
+  } else {
+    StaticData.hasJoinedSession = true;
+    print("code here 1");
+    var tokenUrl = Uri.http('3.110.196.16', '/token');
+    var tokenResponse = await http.post(tokenUrl, body: {
+      'username': FirebaseAuth.instance.currentUser!.uid.toString(),
+      'password': ''
     });
-    if (joinSessionResponse.statusCode == 200) {
-      Fluttertoast.showToast(
-          msg: "Key: ${jsonDecode(joinSessionResponse.body)['shared_key']}",
-          toastLength: Toast.LENGTH_LONG);
 
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(FirebaseAuth.instance.currentUser!.uid)
-          .update({
-        "isSessionFinished": true,
+    if (tokenResponse.statusCode == 200) {
+      print("code here 2");
+      var token;
+      token = jsonDecode(tokenResponse.body)['access_token'];
+
+      var joinSessionResponse = await http
+          .post(Uri.http('3.110.196.16', '/join_qkd/$sessionId'), headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
       });
+      print(joinSessionResponse.statusCode);
+      if (joinSessionResponse.statusCode == 200) {
+        print("code here 3");
+        Fluttertoast.showToast(
+            msg: "Key: ${jsonDecode(joinSessionResponse.body)['shared_key']}",
+            toastLength: Toast.LENGTH_LONG);
+
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(FirebaseAuth.instance.currentUser!.uid)
+            .update({
+          "isSessionFinished": true,
+        });
+      }
     }
   }
 }
