@@ -116,7 +116,7 @@ Future<Map<String, String>> connectUserViaQR(String qpc) async {
     print("Initiating Quantum Key Distribution...");
 
     // Obtain authentication token
-    var tokenUrl = Uri.http('15.206.165.212', '/token');
+    var tokenUrl = Uri.http('13.233.31.125', '/token');
     var tokenResponse = await http.post(tokenUrl, body: {
       'username': currentUser.uid,
       'password': '',
@@ -137,7 +137,7 @@ Future<Map<String, String>> connectUserViaQR(String qpc) async {
     Fluttertoast.showToast(msg: "Token received.");
 
     // Start QKD session
-    var startQKDUrl = Uri.http('15.206.165.212',
+    var startQKDUrl = Uri.http('13.233.31.125',
         '/start_qkd/${FirebaseAuth.instance.currentUser!.uid}');
     var startQKDResponse = await http.post(startQKDUrl, headers: {
       'Content-Type': 'application/json',
@@ -181,7 +181,7 @@ Future<Map<String, String>> connectUserViaQR(String qpc) async {
     }
 
     // Retrieve shared key
-    var getKeyURL = Uri.http('15.206.165.212', '/get_shared_key/$qkdSessionId');
+    var getKeyURL = Uri.http('13.233.31.125', '/get_shared_key/$qkdSessionId');
     var getKeyResponse = await http.get(getKeyURL, headers: {
       'Accept': 'application/json',
       'Authorization': 'Bearer $token',
@@ -259,7 +259,7 @@ Future<bool> isUserOnboarded(String uid) async {
 
 Future<void> joinQKDSession(String sessionId) async {
   try {
-    var tokenUrl = Uri.http('15.206.165.212', '/token');
+    var tokenUrl = Uri.http('13.233.31.125', '/token');
     var tokenResponse = await http.post(tokenUrl, body: {
       'username': FirebaseAuth.instance.currentUser!.uid.toString(),
       'password': ''
@@ -270,7 +270,7 @@ Future<void> joinQKDSession(String sessionId) async {
       token = jsonDecode(tokenResponse.body)['access_token'];
 
       var joinSessionResponse = await http
-          .post(Uri.http('15.206.165.212', '/join_qkd/$sessionId'), headers: {
+          .post(Uri.http('13.233.31.125', '/join_qkd/$sessionId'), headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
         'Authorization': 'Bearer $token',
