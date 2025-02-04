@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:qryptic/helper/StaticData.dart';
+import 'package:qryptic/helper/encryptionServices.dart';
 import 'package:qryptic/model/Chat.dart';
 import 'package:qryptic/model/Message.dart';
 import 'package:qryptic/model/QrypticUser.dart';
@@ -61,7 +64,9 @@ class ChatScreen extends StatelessWidget {
                       final user = userDocs.elementAt(index).data()
                           as Map<String, dynamic>;
                       return GestureDetector(
-                        onTap: () => _startChat(user, _cUser, context),
+                        onTap: () async {
+                          await _startChat(user, _cUser, context);
+                        },
                         child: Container(
                           width: 80,
                           margin: const EdgeInsets.symmetric(horizontal: 8),
@@ -147,16 +152,6 @@ class ChatScreen extends StatelessWidget {
                               chatDoc.data() as Map<String, dynamic>);
                           final chatId = chatDoc.id;
 
-                          // final participant =
-                          //     (chatData['participants'] as List?)?.firstWhere(
-                          //   (p) => p != _auth.currentUser?.uid,
-                          //   orElse: () => {
-                          //     'userId': _auth.currentUser?.uid ?? '',
-                          //     'name': 'Unknown',
-                          //     'qpc': '',
-                          //     'profilePictureUrl': '',
-                          //   },
-                          // );
                           QrypticUser participant = QrypticUser();
 
                           chatData.participants.forEach((element) {
@@ -167,67 +162,110 @@ class ChatScreen extends StatelessWidget {
                           });
                           print(chatData.lastSenderId != null &&
                               chatData.lastSenderId == _auth.currentUser!.uid);
-                          return ListTile(
-                            trailing: ((chatData.lastSenderId != null &&
-                                        chatData.lastSenderId ==
-                                            _auth.currentUser!.uid) ||
-                                    chatData.unreadCount == 0)
-                                ? Container(
-                                    width: 0,
-                                    height: 0,
-                                  )
-                                : Container(
-                                    width: MediaQuery.of(context).size.width *
-                                        0.08,
-                                    height: MediaQuery.of(context).size.height *
-                                        0.03,
-                                    decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(20),
-                                        color: Colors.red),
-                                    child: Center(
-                                      child: Text(
-                                        chatData.unreadCount.toString(),
-                                        style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.white),
-                                      ),
+                          String m = '';
+                          String participantId = '';
+                          bool isMe = false;
+                          if (chatData.lastSenderId != null) {
+                            isMe =
+                                chatData.lastSenderId! == _auth.currentUser!.uid
+                                    ? true
+                                    : false;
+                          }
+                          if (chatData.lastSenderId == null) {
+                            m = chatData.lastMessage;
+                          } else {
+                            if (isMe) {
+                              chatData.participants.forEach(
+                                (element) {
+                                  if (element != _auth.currentUser!.uid) {
+                                    participantId = element;
+                                  }
+                                },
+                              );
+                            }
+                          }
+                          print(m);
+                          return FutureBuilder(
+                              future: chatData.lastSenderId != null
+                                  ? EncryptionService.decryptMessage(
+                                      isMe
+                                          ? participantId
+                                          : chatData.lastSenderId!,
+                                      chatData.lastMessage)
+                                  : Future.delayed(Duration.zero),
+                              builder: (context, snapshot) {
+                                if (chatData.lastSenderId != null) {
+                                  m = snapshot.data.toString();
+                                }
+                                return ListTile(
+                                  trailing: ((chatData.lastSenderId != null &&
+                                              chatData.lastSenderId ==
+                                                  _auth.currentUser!.uid) ||
+                                          chatData.unreadCount == 0)
+                                      ? Container(
+                                          width: 0,
+                                          height: 0,
+                                        )
+                                      : Container(
+                                          width: MediaQuery.of(context)
+                                                  .size
+                                                  .width *
+                                              0.08,
+                                          height: MediaQuery.of(context)
+                                                  .size
+                                                  .height *
+                                              0.03,
+                                          decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(20),
+                                              color: Colors.red),
+                                          child: Center(
+                                            child: Text(
+                                              chatData.unreadCount.toString(),
+                                              style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.white),
+                                            ),
+                                          ),
+                                        ),
+                                  leading: CircleAvatar(
+                                    backgroundImage:
+                                        participant.profilePictureUrl != null
+                                            ? NetworkImage(
+                                                participant.profilePictureUrl!)
+                                            : null,
+                                    backgroundColor: Colors.grey.shade800,
+                                    child: participant.profilePictureUrl == null
+                                        ? const Icon(Icons.person,
+                                            color: Colors.white)
+                                        : null,
+                                  ),
+                                  title: Text(
+                                    participant.displayName ?? 'Unknown',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                            leading: CircleAvatar(
-                              backgroundImage: participant.profilePictureUrl !=
-                                      null
-                                  ? NetworkImage(participant.profilePictureUrl!)
-                                  : null,
-                              backgroundColor: Colors.grey.shade800,
-                              child: participant.profilePictureUrl == null
-                                  ? const Icon(Icons.person,
-                                      color: Colors.white)
-                                  : null,
-                            ),
-                            title: Text(
-                              participant.displayName ?? 'Unknown',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            subtitle: Text(
-                              chatData.lastMessage ?? '',
-                              style: const TextStyle(color: Colors.white70),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => ChatDetailScreen(
-                                      chatId: chatId,
-                                      QrypticUser(),
-                                      participant.userId!),
-                                ),
-                              );
-                            },
-                          );
+                                  subtitle: Text(
+                                    m,
+                                    style:
+                                        const TextStyle(color: Colors.white70),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => ChatDetailScreen(
+                                            chatId: chatId,
+                                            QrypticUser(),
+                                            participant.userId!),
+                                      ),
+                                    );
+                                  },
+                                );
+                              });
                         },
                       );
                     },
@@ -239,7 +277,7 @@ class ChatScreen extends StatelessWidget {
     );
   }
 
-  void _startChat(Map<String, dynamic> user, QrypticUser cUser,
+  Future<void> _startChat(Map<String, dynamic> user, QrypticUser cUser,
       BuildContext context) async {
     final currentUser = _auth.currentUser;
 
@@ -357,7 +395,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         builder: (context, snapshot) {
           if (snapshot.connectionState != ConnectionState.done) {
             return const Center(
-              child: CircularProgressIndicator(),
+              child: SpinKitWave(color: Colors.black, size: 24),
             );
           }
           widget.user = snapshot.hasData
@@ -380,7 +418,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                         .snapshots(),
                     builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
+                        return const Center(
+                            child: SpinKitWave(color: Colors.black, size: 24));
                       }
 
                       if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
@@ -390,40 +429,70 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                         );
                       }
 
-                      _firestore.collection('chats').doc(widget.chatId).update({
-                        "unreadCount": 0,
-                      });
+                      _firestore
+                          .collection('chats')
+                          .doc(widget.chatId)
+                          .get()
+                          .then(
+                        (value) {
+                          if (value.data()!['lastSenderId'] !=
+                              _auth.currentUser!.uid) {
+                            _firestore
+                                .collection('chats')
+                                .doc(widget.chatId)
+                                .update({
+                              "unreadCount": 0,
+                            });
+                          }
+                        },
+                      );
+
                       final messages = snapshot.data!.docs;
 
                       return ListView.builder(
                         reverse: true,
                         itemCount: messages.length,
                         itemBuilder: (context, index) {
-                          final Message message = Message.fromFirestore(
+                          Message message = Message.fromFirestore(
                               messages[index].data() as Map<String, dynamic>);
-
                           final isMe =
                               message.senderId == _auth.currentUser?.uid;
 
-                          return Align(
-                            alignment: isMe
-                                ? Alignment.centerRight
-                                : Alignment.centerLeft,
-                            child: Container(
-                              margin: const EdgeInsets.symmetric(
-                                  vertical: 4, horizontal: 8),
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color:
-                                    isMe ? Colors.blue : Colors.grey.shade800,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                message.content,
-                                style: const TextStyle(color: Colors.white),
-                              ),
-                            ),
-                          );
+                          return FutureBuilder(
+                              future: EncryptionService.decryptMessage(
+                                  isMe ? message.receiverId! : message.senderId,
+                                  message.content),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.done) {
+                                  return Align(
+                                    alignment: isMe
+                                        ? Alignment.centerRight
+                                        : Alignment.centerLeft,
+                                    child: Container(
+                                      margin: const EdgeInsets.symmetric(
+                                          vertical: 4, horizontal: 8),
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: isMe
+                                            ? Colors.blue
+                                            : Colors.grey.shade800,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        snapshot.data!,
+                                        style: const TextStyle(
+                                            color: Colors.white),
+                                      ),
+                                    ),
+                                  );
+                                } else {
+                                  return Center(
+                                    child: SpinKitWave(
+                                        color: Colors.black, size: 24),
+                                  );
+                                }
+                              });
                         },
                       );
                     },
@@ -447,7 +516,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                       ),
                       IconButton(
                         icon: const Icon(Icons.send, color: Colors.blue),
-                        onPressed: _sendMessage,
+                        onPressed: () async {
+                          await _sendMessage();
+                        },
                       ),
                     ],
                   ),
@@ -458,7 +529,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         });
   }
 
-  void _sendMessage() async {
+  Future<void> _sendMessage() async {
     if (_messageController.text.trim().isEmpty) return;
 
     final messageRef = _firestore
@@ -467,12 +538,18 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         .collection('messages')
         .doc();
 
+    final m = await EncryptionService.encryptMessage(
+        widget.user.userId ?? widget.userId, _messageController.text.trim());
+    if (m == null) {
+      Fluttertoast.showToast(msg: "Error");
+      return;
+    }
     final Message _message = Message(
       messageId: messageRef.id,
       chatId: widget.chatId,
       senderId: _auth.currentUser!.uid,
       senderName: StaticData.user.displayName ?? '',
-      content: _messageController.text.trim(),
+      content: m,
       messageType: "text",
       encryptionKeyId: "",
       encryptionAlgorithm: "",
@@ -491,15 +568,12 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         (await _firestore.collection('chats').doc(widget.chatId).get()).data()
             as Map<String, dynamic>);
 
-    chatDoc.lastMessage = _messageController.text.trim();
-    chatDoc.lastMessageTime = DateTime.now();
-    chatDoc.unreadCount += 1;
-    chatDoc.lastSenderId = _auth.currentUser!.uid;
-
-    await _firestore
-        .collection('chats')
-        .doc(chatDoc.chatId)
-        .update(chatDoc.toMap());
+    await _firestore.collection('chats').doc(chatDoc.chatId).update({
+      "lastMessage": m,
+      "lastMessageTime": DateTime.now(),
+      "unreadCount": FieldValue.increment(1),
+      "lastSenderId": _auth.currentUser!.uid,
+    });
 
     _messageController.clear();
   }

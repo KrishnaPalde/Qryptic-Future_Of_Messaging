@@ -1,27 +1,25 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Message {
-  final String messageId; // Unique ID for the message
-  final String chatId; // ID of the associated chat
-  final String senderId; // ID of the sender
-  final String senderName; // Name of the sender
-  final String content; // Message content
-  final String messageType; // 'text', 'image', 'file', 'video', etc.
-  final DateTime timestamp; // Timestamp of when the message was sent
-  final String encryptionKeyId; // ID of the encryption key for this message
-  final String
-      encryptionAlgorithm; // Algorithm used for encryption (e.g., AES-256)
-  final bool isEncrypted; // Whether the message is encrypted
-  final Map<String, dynamic>? qkdMetadata; // QKD-related metadata
-  final bool isDelivered; // Delivery status
-  final bool isRead; // Read status
-  final DateTime? deliveredAt; // Timestamp of delivery
-  final DateTime? readAt; // Timestamp of being read
-  final String? attachmentUrl; // URL for any attached file or media
-  final Map<String, String>?
-      metadata; // Additional metadata for future extensibility
-  final List<ReadReceipt> readBy; // List of users who have read the message
-  final String?
+  String messageId; // Unique ID for the message
+  String chatId; // ID of the associated chat
+  String senderId; // ID of the sender
+  String senderName; // Name of the sender
+  String content; // Message content
+  String messageType; // 'text', 'image', 'file', 'video', etc.
+  DateTime timestamp; // Timestamp of when the message was sent
+  String encryptionKeyId; // ID of the encryption key for this message
+  String encryptionAlgorithm; // Algorithm used for encryption (e.g., AES-256)
+  bool isEncrypted; // Whether the message is encrypted
+  Map<String, dynamic>? qkdMetadata; // QKD-related metadata
+  bool isDelivered; // Delivery status
+  bool isRead; // Read status
+  DateTime? deliveredAt; // Timestamp of delivery
+  DateTime? readAt; // Timestamp of being read
+  String? attachmentUrl; // URL for any attached file or media
+  Map<String, String>? metadata; // Additional metadata for future extensibility
+  List<ReadReceipt> readBy; // List of users who have read the message
+  String?
       receiverId; // Receiver ID for direct messages (nullable for group chats)
 
   Message({

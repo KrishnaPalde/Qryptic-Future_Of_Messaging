@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class CustomProgressIndicator {
   static final CustomProgressIndicator _singleton =
@@ -36,7 +37,8 @@ class CustomProgressIndicator {
                   Padding(
                     padding:
                         const EdgeInsets.only(left: 16, top: 16, right: 16),
-                    child: CircularProgressIndicator(),
+                    child: SpinKitWave(
+                        color: Colors.cyanAccent.withOpacity(0.8), size: 24),
                   ),
                 ],
               ),
