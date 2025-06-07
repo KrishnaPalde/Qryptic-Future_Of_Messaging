@@ -7,6 +7,10 @@
 			<key>NSAllowsArbitraryLoads</key>
 			<true />
 		</dict>
+		<key>NSCameraUsageDescription</key>
+		<string>This app requires camera access for QR code scanning and authentication purposes.</string>
+		<key>NSMicrophoneUsageDescription</key>
+		<string>This app requires microphone access for voice input and scanning purposes.</string>
 
 		<!-- If using Secure EncryptedStorage plugin, these settings are often sufficient for secure
 		storage -->

@@ -19,9 +19,9 @@ class _HomeScreenState extends State<HomeScreen>
   late AnimationController _controller;
 
   final List<Widget> _screens = [
-    ChatScreen(),
+    ChatHomeScreen(),
     QPCScreen(),
-    SettingsScreen(),
+    ProfileSettingsScreen(),
   ];
 
   @override

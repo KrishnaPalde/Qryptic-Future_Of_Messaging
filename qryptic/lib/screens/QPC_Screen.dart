@@ -530,11 +530,10 @@ class _QPCScreenState extends State<QPCScreen> {
   void _showGeneratedQRCode(BuildContext context) {
     showDialog(
       context: context,
-      barrierColor: Colors.black.withOpacity(0.7), // Dim background for focus
+      barrierColor: Colors.black.withOpacity(0.7),
       builder: (c) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        backgroundColor:
-            Colors.transparent, // Transparent background for glass effect
+        backgroundColor: Colors.transparent,
         child: StreamBuilder(
           stream: FirebaseFirestore.instance
               .collection('users')

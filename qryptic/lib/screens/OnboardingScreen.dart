@@ -584,7 +584,6 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
             ? const EdgeInsets.symmetric(horizontal: 50, vertical: 30)
             : const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
-          // Ensures content is scrollable
           child: Container(
             height: MediaQuery.of(context).size.height * 0.8,
             child: Column(
@@ -592,15 +591,12 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
               children: [
                 Column(
                   children: [
-                    // Quantum progress bar
                     LinearProgressIndicator(
                       value: (_currentStep + 1) / 4,
                       backgroundColor: Colors.grey[800],
                       valueColor: AlwaysStoppedAnimation(Colors.cyanAccent),
                     ),
                     const SizedBox(height: 20),
-
-                    // Animated panel transitions
                     if (_currentStep == 0)
                       FadeInRight(
                         duration: Duration(milliseconds: 500),
@@ -625,7 +621,6 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
                 ),
                 Container(
                   width: MediaQuery.of(context).size.width,
-                  // height: MediaQuery.of(context).size.height * 0.1,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
@@ -664,23 +659,19 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
                                   padding: EdgeInsets.symmetric(
                                       vertical: 16, horizontal: 10),
                                   decoration: BoxDecoration(
-                                    // Applying the transparent background with a cyan border
                                     color: _isLoading
                                         ? Colors.cyanAccent.withOpacity(0.8)
-                                        : Colors
-                                            .transparent, // Transparent when not loading
+                                        : Colors.transparent,
                                     borderRadius: BorderRadius.circular(12),
                                     border: Border.all(
-                                        color: Colors.cyan,
-                                        width: 2), // Border with cyan color
+                                        color: Colors.cyan, width: 2),
                                   ),
                                   child: Center(
                                     child: _isLoading
                                         ? SpinKitWave(
-                                            color: Colors.black,
-                                            size: 24) // Loading indicator
+                                            color: Colors.black, size: 24)
                                         : Text(
-                                            'Back', // Updated text for the button
+                                            'Back',
                                             style: TextStyle(
                                               fontSize: 18,
                                               color: Colors.cyanAccent
@@ -695,8 +686,6 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
                           ),
                         ),
                       ),
-
-                      // Next Button
                       Padding(
                         padding: EdgeInsets.only(right: 15.0),
                         child: Container(
@@ -776,11 +765,6 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
   Widget _buildStep3() {
     return Column(
       children: [
-        // FuturisticTextField(
-        //     label: "Enter Qryptic Phrase",
-        //     controller: _qrypticPhraseController,
-        //     isObscure: false,
-        //     onChange: (q) async => {getAutoSuggestions(q)}),
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 24),
           child: TextField(
@@ -834,20 +818,13 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
               });
 
               if (isValidQPC(value)) {
-                // Check QPC availability
                 bool available = await checkQPCAvailability(value);
                 setState(() {
                   qpcStatus = available ? 'Available' : 'Not Available';
                 });
               }
 
-              // Fetch auto-suggestions
               await getAutoSuggestions(value);
-              // } else {
-              //   setState(() {
-              //     suggestedQPCs = [];
-              //   });
-              // }
             },
           ),
         ),
